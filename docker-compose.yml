@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -51,8 +53,15 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      - DJANGO_SECRET_KEY=basma-dev-secret-key-2024
+      - DJANGO_DEBUG=True
+      - POSTGRES_DB=basma_db
+      - POSTGRES_USER=basma_user
+      - POSTGRES_PASSWORD=BasmaDB@2024Secure
+      - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://:BasmaRedis2024@redis:6379/0
+      - CELERY_BROKER_URL=redis://:BasmaRedis2024@redis:6379/1
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,11 +75,28 @@ services:
     command: celery -A config worker -l info
     volumes:
       - ./backend:/app
-    env_file:
-      - .env
+    environment:
+      - DJANGO_SECRET_KEY=basma-dev-secret-key-2024
+      - POSTGRES_DB=basma_db
+      - POSTGRES_USER=basma_user
+      - POSTGRES_PASSWORD=BasmaDB@2024Secure
+      - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://:BasmaRedis2024@redis:6379/0
+      - CELERY_BROKER_URL=redis://:BasmaRedis2024@redis:6379/1
     depends_on:
       - backend
       - redis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: basma_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:
